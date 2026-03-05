@@ -19,6 +19,12 @@ services:
   app:
     build: .
     container_name: calculator-app
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: calc_data
+      DB_USER: root
+      DB_PASS: root123
     depends_on:
       db:
         condition: service_healthy
