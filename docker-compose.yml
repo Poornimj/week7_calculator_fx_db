@@ -1,7 +1,6 @@
 services:
   db:
     image: mariadb:11
-    container_name: calculator-db
     environment:
       MARIADB_ROOT_PASSWORD: root123
       MARIADB_DATABASE: calc_data
@@ -18,7 +17,6 @@ services:
 
   app:
     build: .
-    container_name: calculator-app
     environment:
       DISPLAY: host.docker.internal:0.0
       DB_HOST: db

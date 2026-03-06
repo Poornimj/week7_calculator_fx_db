@@ -25,6 +25,13 @@ pipeline {
             }
         }
 
+        stage('Cleanup Old Containers') {
+            steps {
+                bat 'docker compose down -v || exit /b 0'
+                bat 'docker rm -f calculator-db calculator-app || exit /b 0'
+            }
+        }
+
         stage('Docker Compose Up') {
             steps {
                 bat 'docker compose up -d --build'
@@ -40,7 +47,7 @@ pipeline {
 
     post {
         always {
-            bat 'docker compose down'
+            bat 'docker compose down -v || exit /b 0'
         }
     }
 }
