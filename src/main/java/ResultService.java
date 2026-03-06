@@ -2,11 +2,6 @@ import java.sql.*;
 
 public class ResultService {
 
-    private static final String DB_NAME = "calc_data";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "Test12";
-
-    // Load MariaDB driver
     static {
         try {
             Class.forName("org.mariadb.jdbc.Driver");
@@ -15,17 +10,26 @@ public class ResultService {
         }
     }
 
-    private static String getDatabaseHost() {
-        String host = System.getenv("DB_HOST");
-        if (host == null || host.isEmpty()) host = "db"; // docker-compose service name
-        return host;
+    private static String getEnv(String key, String defaultValue) {
+        String value = System.getenv(key);
+        return (value == null || value.isBlank()) ? defaultValue : value;
     }
 
     private static String getDatabaseUrl() {
-        return "jdbc:mariadb://" + getDatabaseHost() + ":3306/" + DB_NAME +
-                "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+        String host = getEnv("DB_HOST", "db");
+        String port = getEnv("DB_PORT", "3306");
+        String dbName = getEnv("DB_NAME", "calc_data");
+
+        return "jdbc:mariadb://" + host + ":" + port + "/" + dbName;
     }
 
+    private static String getDatabaseUser() {
+        return getEnv("DB_USER", "root");
+    }
+
+    private static String getDatabasePassword() {
+        return getEnv("DB_PASS", "root123");
+    }
 
     public static void saveResult(double n1, double n2,
                                   double sum, double product,
@@ -33,10 +37,10 @@ public class ResultService {
 
         String dbUrl = getDatabaseUrl();
 
-        try (Connection conn = DriverManager.getConnection(dbUrl, DB_USER, DB_PASSWORD);
+        try (Connection conn = DriverManager.getConnection(
+                dbUrl, getDatabaseUser(), getDatabasePassword());
              Statement stmt = conn.createStatement()) {
 
-            // Create table if it doesn't exist (NOW includes subtract & division)
             String createTable = """
                 CREATE TABLE IF NOT EXISTS calc_results (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -51,7 +55,6 @@ public class ResultService {
                 """;
             stmt.executeUpdate(createTable);
 
-            // Insert the result
             String insert = """
                 INSERT INTO calc_results
                 (number1, number2, sum_result, product_result, subtract_result, division_result)
@@ -74,11 +77,7 @@ public class ResultService {
                 ps.executeUpdate();
             }
 
-            System.out.println("Saved: " + n1 + ", " + n2 +
-                    " → Sum=" + sum +
-                    ", Product=" + product +
-                    ", Subtract=" + subtract +
-                    ", Division=" + (division == null ? "NULL" : division));
+            System.out.println("Saved result successfully.");
 
         } catch (SQLException e) {
             System.err.println("Failed to save result to DB: " + dbUrl);

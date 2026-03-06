@@ -20,6 +20,7 @@ public class CalculatorController {
 
             Double division = null;
             String divisionText;
+
             if (num2 == 0) {
                 divisionText = "Cannot divide by zero";
             } else {
@@ -34,7 +35,6 @@ public class CalculatorController {
                             "\nDivision: " + divisionText
             );
 
-            // Save to DB
             ResultService.saveResult(num1, num2, sum, product, subtract, division);
 
         } catch (NumberFormatException e) {
